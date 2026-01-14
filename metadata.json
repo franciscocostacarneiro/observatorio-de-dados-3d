@@ -1,0 +1,7 @@
+{
+  "name": "Observatório de Dados 3D",
+  "description": "Uma plataforma avançada para visualização e gestão de painéis de dados em ambientes 3D interconectados e grids inteligentes, com busca semântica via IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
