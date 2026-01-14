@@ -549,8 +549,8 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
           mixedColor.copy(armColor).lerp(outerColor, (distanceRatio - 0.55) / 0.45);
         }
         
-        // Variação de brilho
-        const brightness = 0.6 + Math.random() * 0.4;
+        // Variação de brilho (reduzido em 30%)
+        const brightness = 0.42 + Math.random() * 0.28;
         colors[i3] = mixedColor.r * brightness;
         colors[i3 + 1] = mixedColor.g * brightness;
         colors[i3 + 2] = mixedColor.b * brightness;
@@ -568,7 +568,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         size: 3.8,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.88,
+        opacity: 0.62,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
@@ -610,7 +610,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
           dustColor.setHex(0x8899cc);
         }
         
-        const brightness = 0.3 + Math.random() * 0.3;
+        const brightness = 0.21 + Math.random() * 0.21;
         dustColors[i3] = dustColor.r * brightness;
         dustColors[i3 + 1] = dustColor.g * brightness;
         dustColors[i3 + 2] = dustColor.b * brightness;
@@ -623,7 +623,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         size: 2.5,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.35,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
