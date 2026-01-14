@@ -35,6 +35,34 @@
             background: rgba(255,255,255,0.5);
             background-clip: content-box;
         }
+        
+        /* Responsividade geral */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        /* Evitar zoom em inputs no iOS */
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+        @media (min-width: 768px) {
+            input, select, textarea {
+                font-size: inherit !important;
+            }
+        }
+        
+        /* Custom scrollbar mobile */
+        @media (max-width: 768px) {
+            ::-webkit-scrollbar {
+                width: 4px;
+            }
+        }
+        
+        /* Melhorar performance em mobile */
+        .force-graph-container canvas {
+            touch-action: pan-x pan-y pinch-zoom;
+        }
     </style>
 <script type="importmap">
 {

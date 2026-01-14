@@ -665,33 +665,33 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         showNavInfo={false}
       />
 
-      <div className="absolute top-24 left-10 z-20 pointer-events-none">
-        <div className="flex flex-col gap-1 border-l-4 border-[#0670fa] pl-8 py-6 bg-gradient-to-r from-blue-950/20 to-transparent backdrop-blur-md rounded-r-[3rem]">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-5">
-               <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_15px_rgba(59,130,246,1)]"></div>
-               <h1 className="font-orbitron text-2xl font-black tracking-[0.4em] text-white uppercase">Constelação de Produtos ONI</h1>
+      <div className="absolute top-16 md:top-24 left-2 sm:left-4 md:left-10 z-20 pointer-events-none">
+        <div className="flex flex-col gap-1 border-l-2 md:border-l-4 border-[#0670fa] pl-3 sm:pl-4 md:pl-8 py-3 sm:py-4 md:py-6 bg-gradient-to-r from-blue-950/20 to-transparent backdrop-blur-md rounded-r-xl sm:rounded-r-2xl md:rounded-r-[3rem]">
+          <div className="flex flex-col gap-2 md:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
+               <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_15px_rgba(59,130,246,1)]"></div>
+               <h1 className="font-orbitron text-xs sm:text-sm md:text-xl lg:text-2xl font-black tracking-wide md:tracking-[0.4em] text-white uppercase">Constelação ONI</h1>
             </div>
-            <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] flex items-center gap-4">
-              <Globe className="w-4 h-4" /> Matriz de dashboards
+            <p className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-blue-400 uppercase tracking-wider md:tracking-[0.3em] flex items-center gap-2 md:gap-4">
+              <Globe className="w-3 h-3 md:w-4 md:h-4" /> <span className="hidden sm:inline">Matriz de dashboards</span><span className="sm:hidden">Dashboards</span>
             </p>
-            <div className="flex items-center gap-8 mt-4 pt-4 border-t border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-600/10 rounded-lg border border-blue-500/20">
-                  <Network className="w-4 h-4 text-blue-500" />
+            <div className="hidden sm:flex items-center gap-4 md:gap-8 mt-2 md:mt-4 pt-2 md:pt-4 border-t border-white/10">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-blue-600/10 rounded-lg border border-blue-500/20">
+                  <Network className="w-3 h-3 md:w-4 md:h-4 text-blue-500" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[16px] font-black text-white leading-none">{activeClusterCount}</span>
-                  <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Eixos</span>
+                  <span className="text-sm md:text-[16px] font-black text-white leading-none">{activeClusterCount}</span>
+                  <span className="text-[7px] md:text-[8px] font-bold text-gray-500 uppercase tracking-widest">Eixos</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-600/10 rounded-lg border border-blue-500/20">
-                  <Database className="w-4 h-4 text-blue-500" />
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-blue-600/10 rounded-lg border border-blue-500/20">
+                  <Database className="w-3 h-3 md:w-4 md:h-4 text-blue-500" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[16px] font-black text-white leading-none">{panels.length}</span>
-                  <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Produtos</span>
+                  <span className="text-sm md:text-[16px] font-black text-white leading-none">{panels.length}</span>
+                  <span className="text-[7px] md:text-[8px] font-bold text-gray-500 uppercase tracking-widest">Produtos</span>
                 </div>
               </div>
             </div>
@@ -699,31 +699,31 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         </div>
       </div>
 
-      <div className="absolute top-24 right-10 z-20 flex gap-4">
+      <div className="absolute top-16 md:top-24 right-2 sm:right-4 md:right-10 z-20 flex gap-2 md:gap-4">
         <button 
           onClick={() => setIsRotating(!isRotating)}
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isRotating ? 'bg-blue-600 shadow-[0_0_30px_rgba(6,112,250,0.5)] text-white' : 'bg-zinc-900 border border-white/10 text-zinc-500 hover:text-white'}`}
+          className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-all ${isRotating ? 'bg-blue-600 shadow-[0_0_30px_rgba(6,112,250,0.5)] text-white' : 'bg-zinc-900 border border-white/10 text-zinc-500 hover:text-white'}`}
           title="Alternar Rotação Global"
         >
-          <RotateCw className={`w-6 h-6 ${isRotating ? 'animate-spin-slow' : ''}`} />
+          <RotateCw className={`w-4 h-4 md:w-6 md:h-6 ${isRotating ? 'animate-spin-slow' : ''}`} />
         </button>
         <button 
           onClick={() => setShowLegend(!showLegend)}
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${showLegend ? 'bg-white text-black' : 'bg-zinc-900 border border-white/10 text-white'}`}
+          className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-all ${showLegend ? 'bg-white text-black' : 'bg-zinc-900 border border-white/10 text-white'}`}
           title="Alternar Legenda"
         >
-          <Layers className="w-6 h-6" />
+          <Layers className="w-4 h-4 md:w-6 md:h-6" />
         </button>
       </div>
 
-      <div className={`absolute top-44 right-10 z-10 transition-all duration-700 transform ${showLegend ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0 pointer-events-none'}`}>
-        <div className="bg-black/90 backdrop-blur-3xl border border-white/10 p-10 rounded-[3.5rem] w-80 shadow-2xl">
-           <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
-             <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] flex items-center gap-4">
-               <Zap className="w-4 h-4 text-yellow-500" /> Eixos Temáticos
+      <div className={`absolute top-28 sm:top-36 md:top-44 right-2 sm:right-4 md:right-10 z-10 transition-all duration-700 transform ${showLegend ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0 pointer-events-none'}`}>
+        <div className="bg-black/90 backdrop-blur-3xl border border-white/10 p-4 sm:p-6 md:p-10 rounded-2xl sm:rounded-[2rem] md:rounded-[3.5rem] w-48 sm:w-64 md:w-80 shadow-2xl max-h-[60vh] md:max-h-[70vh] overflow-hidden flex flex-col">
+           <div className="flex items-center justify-between mb-4 md:mb-8 border-b border-white/10 pb-3 md:pb-6">
+             <h3 className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-blue-400 uppercase tracking-wide md:tracking-[0.4em] flex items-center gap-2 md:gap-4">
+               <Zap className="w-3 h-3 md:w-4 md:h-4 text-yellow-500" /> <span className="hidden sm:inline">Eixos Temáticos</span><span className="sm:hidden">Eixos</span>
              </h3>
            </div>
-           <div className="space-y-3.5 max-h-[420px] overflow-y-auto pr-3 scrollbar-hide">
+           <div className="space-y-2 md:space-y-3.5 flex-1 overflow-y-auto pr-1 md:pr-3 scrollbar-hide">
              {Object.keys(CLUSTER_COLORS).map(cat => {
                const count = panels.filter(p => p.group === cat).length;
                if (count === 0) return null;
@@ -731,15 +731,15 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
                  <button 
                    key={cat} 
                    onClick={() => goToCluster(cat)}
-                   className={`w-full flex items-center justify-between group py-3 px-5 rounded-2xl transition-all border ${selectedCluster === cat ? 'bg-blue-600/30 border-blue-500/50' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}`}
+                   className={`w-full flex items-center justify-between group py-2 md:py-3 px-3 md:px-5 rounded-xl md:rounded-2xl transition-all border ${selectedCluster === cat ? 'bg-blue-600/30 border-blue-500/50' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}`}
                  >
-                   <div className="flex items-center gap-4">
-                      <div className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: CLUSTER_COLORS[cat], color: CLUSTER_COLORS[cat] }}></div>
-                      <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${selectedCluster === cat ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`}>{cat}</span>
+                   <div className="flex items-center gap-2 md:gap-4">
+                      <div className="w-2 h-2 md:w-3 md:h-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: CLUSTER_COLORS[cat], color: CLUSTER_COLORS[cat] }}></div>
+                      <span className={`text-[7px] sm:text-[8px] md:text-[9px] font-black uppercase tracking-wide md:tracking-widest transition-colors ${selectedCluster === cat ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`}>{cat}</span>
                    </div>
-                   <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-zinc-600 font-bold">{count}</span>
-                      {selectedCluster === cat && <Target className="w-3.5 h-3.5 text-blue-500 animate-pulse" />}
+                   <div className="flex items-center gap-1 md:gap-2">
+                      <span className="text-[8px] md:text-[10px] text-zinc-600 font-bold">{count}</span>
+                      {selectedCluster === cat && <Target className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-blue-500 animate-pulse" />}
                    </div>
                  </button>
                );
@@ -758,36 +758,37 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
                 setNodeRotationEnabled(true); // Reabilitar rotação dos nós
                 draggedNodesRef.current.clear(); // Limpar nós arrastados para voltar à órbita
              }}
-             className="w-full mt-8 py-5 bg-blue-600/10 border border-blue-500/30 rounded-3xl text-[9px] font-black text-blue-400 uppercase tracking-[0.5em] hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-4"
+             className="w-full mt-4 md:mt-8 py-3 md:py-5 bg-blue-600/10 border border-blue-500/30 rounded-xl md:rounded-3xl text-[7px] sm:text-[8px] md:text-[9px] font-black text-blue-400 uppercase tracking-wide md:tracking-[0.5em] hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 md:gap-4"
            >
-             <RotateCw className="w-4 h-4" />
-             Resetar Órbita
+             <RotateCw className="w-3 h-3 md:w-4 md:h-4" />
+             <span className="hidden sm:inline">Resetar Órbita</span><span className="sm:hidden">Reset</span>
            </button>
         </div>
       </div>
 
       {hoverNode && (
-        <div className="fixed pointer-events-none z-[100] transform -translate-x-1/2 left-1/2 bottom-20 animate-in zoom-in-90 fade-in duration-300">
-          <div className="bg-black/85 backdrop-blur-3xl border border-white/20 rounded-[2rem] overflow-hidden w-[34rem] shadow-[0_0_80px_rgba(0,0,0,0.8)]">
-            <div className="flex items-center gap-6 p-6">
+        <div className="fixed pointer-events-none z-[100] transform -translate-x-1/2 left-1/2 bottom-4 sm:bottom-8 md:bottom-20 animate-in zoom-in-90 fade-in duration-300 px-2 sm:px-4 w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-[34rem]">
+          <div className="bg-black/85 backdrop-blur-3xl border border-white/20 rounded-xl sm:rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)]">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6 p-3 sm:p-4 md:p-6">
               {/* Thumbnail à esquerda */}
-              <div className="w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden border border-white/10">
+              <div className="w-14 h-14 sm:w-18 sm:h-18 md:w-24 md:h-24 flex-shrink-0 rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden border border-white/10">
                 <img src={hoverNode.thumbnail} className="w-full h-full object-cover" alt={hoverNode.name} />
               </div>
               
               {/* Conteúdo central */}
-              <div className="flex-1">
-                <h2 className="font-orbitron text-base font-black text-white uppercase tracking-wide leading-tight mb-2">
+              <div className="flex-1 min-w-0">
+                <h2 className="font-orbitron text-xs sm:text-sm md:text-base font-black text-white uppercase tracking-wide leading-tight mb-1 md:mb-2 truncate">
                   {hoverNode.name}
                 </h2>
-                <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">
+                <p className="text-[10px] sm:text-xs text-zinc-400 leading-relaxed line-clamp-1 sm:line-clamp-2">
                   {hoverNode.description}
                 </p>
               </div>
               
               {/* Botão à direita */}
-              <button className="flex-shrink-0 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-lg transition-colors shadow-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]">
-                Acessar
+              <button className="flex-shrink-0 px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] sm:text-xs uppercase tracking-wider md:tracking-widest rounded-lg transition-colors shadow-lg hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]">
+                <span className="hidden sm:inline">Acessar</span>
+                <span className="sm:hidden">Ver</span>
               </button>
             </div>
           </div>
