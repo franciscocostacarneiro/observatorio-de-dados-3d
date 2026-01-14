@@ -266,6 +266,26 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
             }
           });
         }
+        
+        // === ANIMAÇÃO DA GALÁXIA ESPIRAL ===
+        const galaxy = scene.getObjectByName('andromeda-galaxy');
+        if (galaxy) {
+          // Rotação lenta da galáxia (independente da câmera)
+          galaxy.rotation.y += 0.0003;
+          
+          // Pulsação sutil do núcleo
+          galaxy.children.forEach((child) => {
+            if (child.name?.startsWith('galaxy-bulge-')) {
+              const layerIndex = parseInt(child.name.split('-')[2]);
+              const pulse = 1 + Math.sin(Date.now() * 0.001 + layerIndex * 0.3) * 0.03;
+              child.scale.set(pulse, pulse, pulse);
+            }
+            if (child.name === 'galaxy-core-glow') {
+              const pulse = 1 + Math.sin(Date.now() * 0.002) * 0.08;
+              child.scale.set(pulse, pulse, pulse);
+            }
+          });
+        }
 
         scene.children.forEach(child => {
           if (child.name?.startsWith('spatial-hud-')) {
@@ -291,7 +311,12 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       const fg = fgRef.current;
       const scene = fg.scene();
 
-      scene.children = scene.children.filter(c => !c.name?.startsWith('shell-') && !c.name?.startsWith('spatial-hud-'));
+      scene.children = scene.children.filter(c => 
+        !c.name?.startsWith('shell-') && 
+        !c.name?.startsWith('spatial-hud-') && 
+        !c.name?.startsWith('andromeda-galaxy') &&
+        !c.name?.startsWith('galaxy-')
+      );
 
       const hubGroup = new THREE.Group();
       hubGroup.name = 'shell-hub';
@@ -414,6 +439,285 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
 
       scene.add(hubGroup);
 
+      // === GALÁXIA ESPIRAL PROCEDURAL (TIPO ANDROMEDA) ===
+      const galaxyGroup = new THREE.Group();
+      galaxyGroup.name = 'andromeda-galaxy';
+      
+      // Parâmetros da galáxia - MODELO ANDRÔMEDA (espiral Sb)
+      const PARTICLE_COUNT = 65000;
+      const ARMS = 2; // Andrômeda tem 2 braços principais
+      const ARM_SPREAD = 0.25; // Braços mais definidos e apertados
+      const GALAXY_RADIUS = 5500;
+      const GALAXY_THICKNESS = 300;
+      const SPIN_FACTOR = 1.8; // Espiral mais aberta (logarítmica suave)
+      const BULGE_RATIO = 0.35; // Núcleo maior (característica de Andrômeda)
+      
+      // Geometria de partículas principais
+      const galaxyGeometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(PARTICLE_COUNT * 3);
+      const colors = new Float32Array(PARTICLE_COUNT * 3);
+      const sizes = new Float32Array(PARTICLE_COUNT);
+      
+      // Cores da galáxia Andrômeda (tons mais quentes no núcleo, azulados nos braços)
+      const coreColor = new THREE.Color(0xfff4e0); // Branco amarelado quente
+      const innerColor = new THREE.Color(0xffe8b0); // Amarelo dourado
+      const armColor = new THREE.Color(0xaaccff); // Azul claro (estrelas jovens)
+      const outerColor = new THREE.Color(0x8899dd); // Azul mais escuro
+      
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const i3 = i * 3;
+        
+        // Distribuição Andrômeda: 35% núcleo grande, 50% braços, 15% halo
+        const rand = Math.random();
+        const isInBulge = rand < BULGE_RATIO;
+        const isInHalo = rand >= 0.85;
+        
+        let x, y, z, distanceRatio;
+        
+        if (isInBulge) {
+          // Núcleo elíptico grande (bulge) - com ZONA VAZIA central para buraco negro
+          const bulgeRadius = 1200;
+          const blackHoleRadius = 550; // Zona vazia MAIOR para o buraco negro
+          const r = blackHoleRadius + Math.pow(Math.random(), 0.7) * (bulgeRadius - blackHoleRadius);
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(2 * Math.random() - 1);
+          
+          x = r * Math.sin(phi) * Math.cos(theta);
+          y = r * Math.sin(phi) * Math.sin(theta) * 0.4; // Mais achatado
+          z = r * Math.cos(phi);
+          distanceRatio = r / bulgeRadius * 0.3;
+        } else if (isInHalo) {
+          // Halo estelar difuso
+          const distance = 800 + Math.random() * (GALAXY_RADIUS * 0.9);
+          const angle = Math.random() * Math.PI * 2;
+          distanceRatio = distance / GALAXY_RADIUS;
+          
+          x = Math.cos(angle) * distance;
+          z = Math.sin(angle) * distance;
+          
+          const heightFactor = 1 - Math.pow(distanceRatio, 0.8);
+          y = (Math.random() - 0.5) * GALAXY_THICKNESS * 0.5 * heightFactor;
+        } else {
+          // Braços espirais (espiral logarítmica - fórmula de Andrômeda)
+          const armIndex = Math.floor(Math.random() * ARMS);
+          const armAngle = (armIndex / ARMS) * Math.PI * 2;
+          
+          // Distância com concentração no meio dos braços
+          const t = Math.random();
+          const distance = 600 + Math.pow(t, 0.8) * (GALAXY_RADIUS - 600);
+          distanceRatio = distance / GALAXY_RADIUS;
+          
+          // Espiral logarítmica: r = a * e^(b*theta)
+          // Invertendo: theta = ln(r/a) / b
+          const b = 0.3; // Fator de abertura da espiral
+          const spiralAngle = armAngle + Math.log(distance / 500) / b;
+          
+          // Espalhamento gaussiano nos braços (mais concentrado no centro do braço)
+          const gaussianSpread = () => {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+          };
+          
+          const spreadFactor = ARM_SPREAD * distance * (0.3 + distanceRatio * 0.7);
+          const spreadX = gaussianSpread() * spreadFactor * 0.5;
+          const spreadZ = gaussianSpread() * spreadFactor * 0.5;
+          
+          x = Math.cos(spiralAngle) * distance + spreadX;
+          z = Math.sin(spiralAngle) * distance + spreadZ;
+          
+          // Altura fina (disco galáctico)
+          const heightFactor = Math.exp(-distanceRatio * 2);
+          y = gaussianSpread() * GALAXY_THICKNESS * 0.3 * heightFactor;
+        }
+        
+        positions[i3] = x;
+        positions[i3 + 1] = y;
+        positions[i3 + 2] = z;
+        
+        // Cor baseada na distância (gradiente realista)
+        const mixedColor = new THREE.Color();
+        if (distanceRatio < 0.25) {
+          // Núcleo: branco quente -> amarelo dourado
+          mixedColor.copy(coreColor).lerp(innerColor, distanceRatio / 0.25);
+        } else if (distanceRatio < 0.55) {
+          // Transição: amarelo -> azul claro (regiões de formação estelar)
+          mixedColor.copy(innerColor).lerp(armColor, (distanceRatio - 0.25) / 0.3);
+        } else {
+          // Bordas: azul claro -> azul escuro
+          mixedColor.copy(armColor).lerp(outerColor, (distanceRatio - 0.55) / 0.45);
+        }
+        
+        // Variação de brilho
+        const brightness = 0.6 + Math.random() * 0.4;
+        colors[i3] = mixedColor.r * brightness;
+        colors[i3 + 1] = mixedColor.g * brightness;
+        colors[i3 + 2] = mixedColor.b * brightness;
+        
+        // Tamanho (maiores no núcleo)
+        sizes[i] = isInBulge ? 2.5 + Math.random() * 3 : 1.5 + Math.random() * 2 * (1 - distanceRatio * 0.4);
+      }
+      
+      galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      galaxyGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+      
+      // Material com vertex colors e additive blending
+      const galaxyMaterial = new THREE.PointsMaterial({
+        size: 3.8,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.88,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      
+      const galaxyParticles = new THREE.Points(galaxyGeometry, galaxyMaterial);
+      galaxyParticles.name = 'galaxy-particles';
+      galaxyGroup.add(galaxyParticles);
+      
+      // === CAMADA DE PREENCHIMENTO ADICIONAL (POEIRA CÓSMICA) ===
+      const dustCount = 25000;
+      const dustGeometry = new THREE.BufferGeometry();
+      const dustPositions = new Float32Array(dustCount * 3);
+      const dustColors = new Float32Array(dustCount * 3);
+      const blackHoleClearZone = 600; // Zona vazia MAIOR para o buraco negro
+      
+      for (let i = 0; i < dustCount; i++) {
+        const i3 = i * 3;
+        
+        // Distribuição em disco completo para preencher gaps - COM ZONA VAZIA CENTRAL
+        const distance = blackHoleClearZone + Math.random() * (GALAXY_RADIUS * 1.1 - blackHoleClearZone);
+        const angle = Math.random() * Math.PI * 2;
+        const distanceRatio = distance / GALAXY_RADIUS;
+        
+        dustPositions[i3] = Math.cos(angle) * distance;
+        dustPositions[i3 + 2] = Math.sin(angle) * distance;
+        
+        // Altura muito fina
+        const heightFactor = Math.max(0.1, 1 - distanceRatio);
+        dustPositions[i3 + 1] = (Math.random() - 0.5) * 200 * heightFactor;
+        
+        // Cor sutil baseada na distância
+        const dustColor = new THREE.Color();
+        if (distanceRatio < 0.3) {
+          dustColor.setHex(0xffeedd);
+        } else if (distanceRatio < 0.6) {
+          dustColor.setHex(0xaabbdd);
+        } else {
+          dustColor.setHex(0x8899cc);
+        }
+        
+        const brightness = 0.3 + Math.random() * 0.3;
+        dustColors[i3] = dustColor.r * brightness;
+        dustColors[i3 + 1] = dustColor.g * brightness;
+        dustColors[i3 + 2] = dustColor.b * brightness;
+      }
+      
+      dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+      dustGeometry.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
+      
+      const dustMaterial = new THREE.PointsMaterial({
+        size: 2.5,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.5,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      
+      const dustParticles = new THREE.Points(dustGeometry, dustMaterial);
+      dustParticles.name = 'galaxy-dust';
+      galaxyGroup.add(dustParticles);
+      
+      // Núcleo luminoso (Bulge glow) - camadas de luz volumétrica
+      for (let layer = 0; layer < 6; layer++) {
+        const bulgeSize = 250 + layer * 180;
+        const bulgeGeo = new THREE.SphereGeometry(bulgeSize, 32, 32);
+        const bulgeMat = new THREE.MeshBasicMaterial({
+          color: layer < 2 ? 0xfff8e7 : (layer < 4 ? 0xffdd99 : 0xeeddcc),
+          transparent: true,
+          opacity: 0.1 - layer * 0.013,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        const bulge = new THREE.Mesh(bulgeGeo, bulgeMat);
+        bulge.name = `galaxy-bulge-${layer}`;
+        galaxyGroup.add(bulge);
+      }
+      
+      // Glow central intenso
+      const coreGlowGeo = new THREE.SphereGeometry(180, 32, 32);
+      const coreGlowMat = new THREE.MeshBasicMaterial({
+        color: 0xffffee,
+        transparent: true,
+        opacity: 0.2,
+        blending: THREE.AdditiveBlending
+      });
+      const coreGlow = new THREE.Mesh(coreGlowGeo, coreGlowMat);
+      coreGlow.name = 'galaxy-core-glow';
+      galaxyGroup.add(coreGlow);
+      
+      // Posicionar e inclinar a galáxia
+      galaxyGroup.rotation.x = Math.PI * 0.12; // Inclinação mais sutil
+      galaxyGroup.rotation.z = Math.PI * 0.03;
+      galaxyGroup.position.y = -150; // Ligeiramente abaixo do centro
+      
+      scene.add(galaxyGroup);
+
+      // Estrelas de fundo DENSAS (muito mais para preencher todo o espaço)
+      const starGeo = new THREE.BufferGeometry();
+      const starPos = [];
+      const starColors = [];
+      // Camada interna de estrelas
+      for(let i=0; i<12500; i++) {
+        const r = 5500 + Math.random() * 3000;
+        const u = Math.random(); const v = Math.random();
+        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
+        starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+        
+        // Cores variadas para estrelas de fundo
+        const starType = Math.random();
+        if (starType < 0.1) {
+          starColors.push(1.0, 0.8, 0.6); // Laranja
+        } else if (starType < 0.25) {
+          starColors.push(0.85, 0.9, 1.0); // Azul claro
+        } else {
+          starColors.push(0.75, 0.75, 0.8); // Branco acinzentado
+        }
+      }
+      // Camada externa de estrelas
+      for(let i=0; i<20000; i++) {
+        const r = 8000 + Math.random() * 5000;
+        const u = Math.random(); const v = Math.random();
+        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
+        starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+        
+        const starType = Math.random();
+        if (starType < 0.15) {
+          starColors.push(1.0, 0.85, 0.7); // Laranja
+        } else if (starType < 0.3) {
+          starColors.push(0.8, 0.88, 1.0); // Azul claro
+        } else {
+          starColors.push(0.7, 0.7, 0.75); // Branco acinzentado
+        }
+      }
+      starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+      starGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+      const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ 
+        size: 1.2, 
+        transparent: true, 
+        opacity: 0.6, 
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }));
+      stars.name = 'shell-stars';
+      scene.add(stars);
+
       (Object.entries(clusterCentroids) as [string, {x: number, y: number, z: number}][]).forEach(([cat, pos]) => {
         const count = panels.filter(p => p.group === cat).length;
         
@@ -427,25 +731,6 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         }
       });
 
-      const starGeo = new THREE.BufferGeometry();
-      const starPos = [];
-      for(let i=0; i<35000; i++) {
-        const r = 4000 + Math.random() * 4000;
-        const u = Math.random(); const v = Math.random();
-        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
-        starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
-      }
-      starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-      const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ 
-        color: 0x585858, 
-        size: 1.5, 
-        transparent: true, 
-        opacity: 0.8, 
-        blending: THREE.AdditiveBlending
-      }));
-      stars.name = 'shell-stars';
-      scene.add(stars);
-
       fg.cameraPosition({ x: 3500, y: 1800, z: 3500 }, { x: 0, y: 0, z: 0 }, 3000);
     }
   }, [clusterCentroids, panels]);
@@ -454,6 +739,10 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     const canvas = document.createElement('canvas');
     canvas.width = 512; canvas.height = 256;
     const ctx = canvas.getContext('2d')!;
+    
+    // IMPORTANTE: Limpar canvas com fundo totalmente transparente
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     ctx.font = '900 34px Orbitron';
     ctx.textAlign = 'center';
     ctx.fillStyle = color;
@@ -470,11 +759,14 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     ctx.stroke();
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.premultiplyAlpha = true;
     const spriteMaterial = new THREE.SpriteMaterial({ 
       map: texture, 
       transparent: true, 
       blending: THREE.AdditiveBlending,
-      opacity: 0.9
+      opacity: 0.9,
+      depthTest: false,
+      depthWrite: false
     });
     const sprite = new THREE.Sprite(spriteMaterial);
     sprite.scale.set(180, 90, 1);
@@ -485,6 +777,9 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     const canvas = document.createElement('canvas');
     canvas.width = 1024; canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
+    
+    // IMPORTANTE: Limpar canvas com fundo totalmente transparente
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Texto formatado com colchetes estilo tech
     const formattedText = `[  ${text.toUpperCase()}  ]`;
@@ -502,7 +797,14 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     ctx.fillText(formattedText, 512, 256);
     
     const texture = new THREE.CanvasTexture(canvas);
-    const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending });
+    texture.premultiplyAlpha = true;
+    const spriteMaterial = new THREE.SpriteMaterial({ 
+      map: texture, 
+      transparent: true, 
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      depthWrite: false
+    });
     const sprite = new THREE.Sprite(spriteMaterial);
     sprite.scale.set(fontSize * 18, fontSize * 9, 1);
     return sprite;
@@ -512,6 +814,19 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     const group = new THREE.Group();
     const isHovered = hoverNode?.id === node.id;
     const isRelated = hoverNode?.group === node.group;
+    
+    // === HITBOX INVISÍVEL PARA MELHOR SENSIBILIDADE ===
+    // Esfera invisível maior para facilitar detecção do mouse
+    const hitboxGeo = new THREE.SphereGeometry(node.val * 3.5, 16, 16);
+    const hitboxMat = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false
+    });
+    const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+    hitbox.name = 'hitbox';
+    group.add(hitbox);
     
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(node.val, 28, 28),
@@ -528,17 +843,25 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d')!;
+    
+    // IMPORTANTE: Limpar canvas com fundo totalmente transparente
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
     grad.addColorStop(0, node.color);
+    grad.addColorStop(0.4, node.color.replace(')', ', 0.5)').replace('rgb', 'rgba'));
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0,0,128,128);
     const glowTex = new THREE.CanvasTexture(canvas);
+    glowTex.premultiplyAlpha = true;
     const glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({ 
       map: glowTex, 
       transparent: true, 
       blending: THREE.AdditiveBlending,
-      opacity: isHovered ? 1.0 : (isRelated ? 0.7 : 0.4)
+      opacity: isHovered ? 1.0 : (isRelated ? 0.7 : 0.4),
+      depthTest: false,
+      depthWrite: false
     }));
     glowSprite.scale.set(node.val * 6, node.val * 6, 1);
     group.add(glowSprite);
@@ -606,6 +929,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         backgroundColor="#000000"
         nodeThreeObject={nodeThreeObject}
         nodeLabel={null}
+        nodeThreeObjectExtend={false}
         onNodeHover={setHoverNode}
         onNodeClick={(node: any) => {
           const p = panels.find(pa => pa.id === node.id);
