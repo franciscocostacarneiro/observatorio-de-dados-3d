@@ -268,7 +268,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         }
         
         // === ANIMAÇÃO DA GALÁXIA ESPIRAL ===
-        const galaxy = scene.getObjectByName('andromeda-galaxy');
+        const galaxy = scene.getObjectByName('spiral-galaxy');
         if (galaxy) {
           // Rotação lenta da galáxia (independente da câmera)
           galaxy.rotation.y += 0.0003;
@@ -314,261 +314,130 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       scene.children = scene.children.filter(c => 
         !c.name?.startsWith('shell-') && 
         !c.name?.startsWith('spatial-hud-') && 
-        !c.name?.startsWith('andromeda-galaxy') &&
+        !c.name?.startsWith('spiral-galaxy') &&
         !c.name?.startsWith('galaxy-')
       );
 
       const hubGroup = new THREE.Group();
       hubGroup.name = 'shell-hub';
 
-      // === BURACO NEGRO SUPERMASSIVO ===
+      // Centro visual removido - a galáxia espiral será o elemento central
       
-      // Singularidade - esfera completamente negra no centro
-      const singularityGeo = new THREE.SphereGeometry(80, 64, 64);
-      const singularityMat = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        transparent: false
-      });
-      const singularity = new THREE.Mesh(singularityGeo, singularityMat);
-      hubGroup.add(singularity);
-
-      // Sombra do buraco negro (photon sphere)
-      const shadowGeo = new THREE.SphereGeometry(95, 64, 64);
-      const shadowMat = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        transparent: true,
-        opacity: 0.98
-      });
-      hubGroup.add(new THREE.Mesh(shadowGeo, shadowMat));
-
-      // Anel de fótons (photon ring) - o brilho característico ao redor do horizonte de eventos
-      const photonRingGeo = new THREE.TorusGeometry(105, 8, 32, 128);
-      const photonRingMat = new THREE.MeshBasicMaterial({
-        color: 0xffcc66,
-        transparent: true,
-        opacity: 0.6,
-        blending: THREE.AdditiveBlending
-      });
-      const photonRing = new THREE.Mesh(photonRingGeo, photonRingMat);
-      photonRing.rotation.x = Math.PI / 2.5;
-      photonRing.name = 'photon-ring';
-      hubGroup.add(photonRing);
-
-      // Glow do anel de fótons
-      const photonGlowGeo = new THREE.TorusGeometry(105, 25, 32, 128);
-      const photonGlowMat = new THREE.MeshBasicMaterial({
-        color: 0xff9933,
-        transparent: true,
-        opacity: 0.15,
-        blending: THREE.AdditiveBlending
-      });
-      const photonGlow = new THREE.Mesh(photonGlowGeo, photonGlowMat);
-      photonGlow.rotation.x = Math.PI / 2.5;
-      hubGroup.add(photonGlow);
-
-      // Disco de acreção - mais inclinado e com gradiente de cores (quente no centro, frio nas bordas)
-      const accretionColors = [0xffffcc, 0xffdd88, 0xffaa44, 0xff7722, 0xcc4400, 0x882200, 0x441100, 0x220800];
-      
-      for (let i = 0; i < 12; i++) {
-        const innerRadius = 120 + i * 22;
-        const outerRadius = innerRadius + 18;
-        const ringGeo = new THREE.RingGeometry(innerRadius, outerRadius, 128);
-        const colorIndex = Math.min(i, accretionColors.length - 1);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: accretionColors[colorIndex],
-          transparent: true,
-          opacity: 0.25 - i * 0.015,
-          side: THREE.DoubleSide,
-          blending: THREE.AdditiveBlending
-        });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2.5;
-        ring.rotation.z = i * 0.08;
-        ring.name = `accretion-ring-${i}`;
-        hubGroup.add(ring);
-      }
-
-      // Efeito de lensing gravitacional - anel de luz curvada atrás do buraco negro
-      const lensingGeo = new THREE.RingGeometry(85, 130, 128);
-      const lensingMat = new THREE.MeshBasicMaterial({
-        color: 0xffeedd,
-        transparent: true,
-        opacity: 0.12,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending
-      });
-      const lensing = new THREE.Mesh(lensingGeo, lensingMat);
-      lensing.rotation.x = Math.PI / 2.5 + Math.PI; // Atrás do disco
-      lensing.position.z = -10;
-      hubGroup.add(lensing);
-
-      // Jatos relativísticos (perpendiculares ao disco)
-      for (let j = 0; j < 2; j++) {
-        const jetDirection = j === 0 ? 1 : -1;
-        for (let i = 0; i < 6; i++) {
-          const jetGeo = new THREE.ConeGeometry(15 - i * 2, 80, 16, 1, true);
-          const jetMat = new THREE.MeshBasicMaterial({
-            color: 0x6688ff,
-            transparent: true,
-            opacity: 0.15 - i * 0.02,
-            blending: THREE.AdditiveBlending
-          });
-          const jet = new THREE.Mesh(jetGeo, jetMat);
-          jet.position.y = jetDirection * (100 + i * 60);
-          jet.rotation.x = jetDirection === -1 ? Math.PI : 0;
-          jet.name = `jet-${j}-${i}`;
-          hubGroup.add(jet);
-        }
-      }
-
-      // Halo de poeira distante
-      for (let i = 0; i < 3; i++) {
-        const radius = 450 + i * 60;
-        const torusGeo = new THREE.TorusGeometry(radius, 2, 16, 100);
-        const torusMat = new THREE.MeshBasicMaterial({
-          color: 0xaaaaaa,
-          transparent: true,
-          opacity: 0.04 - i * 0.01,
-          blending: THREE.AdditiveBlending
-        });
-        const torus = new THREE.Mesh(torusGeo, torusMat);
-        torus.rotation.x = Math.PI / 2.5;
-        torus.name = `dust-ring-${i}`;
-        hubGroup.add(torus);
-      }
-
       scene.add(hubGroup);
 
-      // === GALÁXIA ESPIRAL PROCEDURAL (TIPO ANDROMEDA) ===
+      // === GALÁXIA ESPIRAL COM CENTRO NÍTIDO ===
       const galaxyGroup = new THREE.Group();
-      galaxyGroup.name = 'andromeda-galaxy';
+      galaxyGroup.name = 'spiral-galaxy';
       
-      // Parâmetros da galáxia - MODELO ANDRÔMEDA (espiral Sb)
-      const PARTICLE_COUNT = 65000;
-      const ARMS = 2; // Andrômeda tem 2 braços principais
-      const ARM_SPREAD = 0.25; // Braços mais definidos e apertados
-      const GALAXY_RADIUS = 5500;
-      const GALAXY_THICKNESS = 300;
-      const SPIN_FACTOR = 1.8; // Espiral mais aberta (logarítmica suave)
-      const BULGE_RATIO = 0.35; // Núcleo maior (característica de Andrômeda)
+      // Parâmetros para espiral bem definida
+      const PARTICLE_COUNT = 55000;
+      const GALAXY_RADIUS = 4500;
       
-      // Geometria de partículas principais
       const galaxyGeometry = new THREE.BufferGeometry();
       const positions = new Float32Array(PARTICLE_COUNT * 3);
       const colors = new Float32Array(PARTICLE_COUNT * 3);
-      const sizes = new Float32Array(PARTICLE_COUNT);
       
-      // Cores da galáxia Andrômeda (tons mais quentes no núcleo, azulados nos braços)
-      const coreColor = new THREE.Color(0xfff4e0); // Branco amarelado quente
-      const innerColor = new THREE.Color(0xffe8b0); // Amarelo dourado
-      const armColor = new THREE.Color(0xaaccff); // Azul claro (estrelas jovens)
-      const outerColor = new THREE.Color(0x8899dd); // Azul mais escuro
+      // Cores: núcleo dourado brilhante -> amarelo -> branco nas pontas
+      const coreColor = new THREE.Color(0xfff4dd); // Branco dourado
+      const midColor = new THREE.Color(0xffeecc); // Amarelo claro
+      const armColor = new THREE.Color(0xeeeedd); // Branco quente
+      const tipColor = new THREE.Color(0xccccdd); // Cinza azulado
+      
+      // Função gaussiana para espalhamento
+      const gaussRand = () => {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+      };
       
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const i3 = i * 3;
         
-        // Distribuição Andrômeda: 35% núcleo grande, 50% braços, 15% halo
+        // Distribuição: 25% núcleo denso, 75% braços espirais
         const rand = Math.random();
-        const isInBulge = rand < BULGE_RATIO;
-        const isInHalo = rand >= 0.85;
+        const isInCore = rand < 0.25;
         
         let x, y, z, distanceRatio;
         
-        if (isInBulge) {
-          // Núcleo elíptico grande (bulge) - com ZONA VAZIA central para buraco negro
-          const bulgeRadius = 1200;
-          const blackHoleRadius = 550; // Zona vazia MAIOR para o buraco negro
-          const r = blackHoleRadius + Math.pow(Math.random(), 0.7) * (bulgeRadius - blackHoleRadius);
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.acos(2 * Math.random() - 1);
+        if (isInCore) {
+          // NÚCLEO ESPIRAL - estrelas seguem espiral desde o centro
+          const coreRadius = 600;
+          const r = Math.pow(Math.random(), 0.4) * coreRadius;
           
-          x = r * Math.sin(phi) * Math.cos(theta);
-          y = r * Math.sin(phi) * Math.sin(theta) * 0.4; // Mais achatado
-          z = r * Math.cos(phi);
-          distanceRatio = r / bulgeRadius * 0.3;
-        } else if (isInHalo) {
-          // Halo estelar difuso
-          const distance = 800 + Math.random() * (GALAXY_RADIUS * 0.9);
-          const angle = Math.random() * Math.PI * 2;
-          distanceRatio = distance / GALAXY_RADIUS;
+          // Espiral continua até o centro!
+          const armIndex = Math.floor(Math.random() * 2);
+          const armOffset = armIndex * Math.PI;
+          const spiralAngle = armOffset + Math.log(Math.max(r, 10) / 10) / 0.3;
           
-          x = Math.cos(angle) * distance;
-          z = Math.sin(angle) * distance;
+          // Espalhamento muito fino no núcleo
+          const spread = 15 + r * 0.05;
+          x = Math.cos(spiralAngle) * r + gaussRand() * spread;
+          z = Math.sin(spiralAngle) * r + gaussRand() * spread;
+          y = gaussRand() * 25; // Muito fino
           
-          const heightFactor = 1 - Math.pow(distanceRatio, 0.8);
-          y = (Math.random() - 0.5) * GALAXY_THICKNESS * 0.5 * heightFactor;
+          distanceRatio = r / GALAXY_RADIUS;
         } else {
-          // Braços espirais (espiral logarítmica - fórmula de Andrômeda)
-          const armIndex = Math.floor(Math.random() * ARMS);
-          const armAngle = (armIndex / ARMS) * Math.PI * 2;
+          // BRAÇOS ESPIRAIS EM "S" - continuação do núcleo
+          const armIndex = Math.floor(Math.random() * 2);
+          const armOffset = armIndex * Math.PI;
           
-          // Distância com concentração no meio dos braços
-          const t = Math.random();
-          const distance = 600 + Math.pow(t, 0.8) * (GALAXY_RADIUS - 600);
+          // Distância a partir do núcleo
+          const t = Math.pow(Math.random(), 0.6);
+          const distance = 400 + t * (GALAXY_RADIUS - 400);
           distanceRatio = distance / GALAXY_RADIUS;
           
-          // Espiral logarítmica: r = a * e^(b*theta)
-          // Invertendo: theta = ln(r/a) / b
-          const b = 0.3; // Fator de abertura da espiral
-          const spiralAngle = armAngle + Math.log(distance / 500) / b;
+          // Espiral logarítmica contínua
+          const spiralTightness = 0.32;
+          const spiralAngle = armOffset + Math.log(distance / 10) / spiralTightness;
           
-          // Espalhamento gaussiano nos braços (mais concentrado no centro do braço)
-          const gaussianSpread = () => {
-            let u = 0, v = 0;
-            while(u === 0) u = Math.random();
-            while(v === 0) v = Math.random();
-            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-          };
-          
-          const spreadFactor = ARM_SPREAD * distance * (0.3 + distanceRatio * 0.7);
-          const spreadX = gaussianSpread() * spreadFactor * 0.5;
-          const spreadZ = gaussianSpread() * spreadFactor * 0.5;
+          // Espalhamento cresce com a distância
+          const spreadWidth = 50 + distance * 0.06;
+          const spreadX = gaussRand() * spreadWidth;
+          const spreadZ = gaussRand() * spreadWidth;
           
           x = Math.cos(spiralAngle) * distance + spreadX;
           z = Math.sin(spiralAngle) * distance + spreadZ;
           
-          // Altura fina (disco galáctico)
-          const heightFactor = Math.exp(-distanceRatio * 2);
-          y = gaussianSpread() * GALAXY_THICKNESS * 0.3 * heightFactor;
+          // Altura fina
+          const heightSpread = 30 * (1 - distanceRatio * 0.4);
+          y = gaussRand() * heightSpread;
         }
         
         positions[i3] = x;
         positions[i3 + 1] = y;
         positions[i3 + 2] = z;
         
-        // Cor baseada na distância (gradiente realista)
+        // Gradiente de cor contínuo do centro às pontas
         const mixedColor = new THREE.Color();
-        if (distanceRatio < 0.25) {
-          // Núcleo: branco quente -> amarelo dourado
-          mixedColor.copy(coreColor).lerp(innerColor, distanceRatio / 0.25);
-        } else if (distanceRatio < 0.55) {
-          // Transição: amarelo -> azul claro (regiões de formação estelar)
-          mixedColor.copy(innerColor).lerp(armColor, (distanceRatio - 0.25) / 0.3);
+        if (distanceRatio < 0.1) {
+          // Centro brilhante
+          mixedColor.copy(coreColor);
+        } else if (distanceRatio < 0.25) {
+          mixedColor.copy(coreColor).lerp(midColor, (distanceRatio - 0.1) / 0.15);
+        } else if (distanceRatio < 0.5) {
+          mixedColor.copy(midColor).lerp(armColor, (distanceRatio - 0.25) / 0.25);
         } else {
-          // Bordas: azul claro -> azul escuro
-          mixedColor.copy(armColor).lerp(outerColor, (distanceRatio - 0.55) / 0.45);
+          mixedColor.copy(armColor).lerp(tipColor, (distanceRatio - 0.5) / 0.5);
         }
         
-        // Variação de brilho (reduzido em 30%)
-        const brightness = 0.42 + Math.random() * 0.28;
+        // Brilho mais forte no centro
+        const baseBrightness = isInCore ? 0.7 : 0.5;
+        const brightness = baseBrightness + Math.random() * 0.3;
         colors[i3] = mixedColor.r * brightness;
         colors[i3 + 1] = mixedColor.g * brightness;
         colors[i3 + 2] = mixedColor.b * brightness;
-        
-        // Tamanho (maiores no núcleo)
-        sizes[i] = isInBulge ? 2.5 + Math.random() * 3 : 1.5 + Math.random() * 2 * (1 - distanceRatio * 0.4);
       }
       
       galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      galaxyGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
       
-      // Material com vertex colors e additive blending
+      // Material
       const galaxyMaterial = new THREE.PointsMaterial({
-        size: 3.8,
+        size: 2.8,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.62,
+        opacity: 0.8,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
@@ -578,145 +447,356 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       galaxyParticles.name = 'galaxy-particles';
       galaxyGroup.add(galaxyParticles);
       
-      // === CAMADA DE PREENCHIMENTO ADICIONAL (POEIRA CÓSMICA) ===
-      const dustCount = 25000;
-      const dustGeometry = new THREE.BufferGeometry();
-      const dustPositions = new Float32Array(dustCount * 3);
-      const dustColors = new Float32Array(dustCount * 3);
-      const blackHoleClearZone = 600; // Zona vazia MAIOR para o buraco negro
-      
-      for (let i = 0; i < dustCount; i++) {
-        const i3 = i * 3;
-        
-        // Distribuição em disco completo para preencher gaps - COM ZONA VAZIA CENTRAL
-        const distance = blackHoleClearZone + Math.random() * (GALAXY_RADIUS * 1.1 - blackHoleClearZone);
-        const angle = Math.random() * Math.PI * 2;
-        const distanceRatio = distance / GALAXY_RADIUS;
-        
-        dustPositions[i3] = Math.cos(angle) * distance;
-        dustPositions[i3 + 2] = Math.sin(angle) * distance;
-        
-        // Altura muito fina
-        const heightFactor = Math.max(0.1, 1 - distanceRatio);
-        dustPositions[i3 + 1] = (Math.random() - 0.5) * 200 * heightFactor;
-        
-        // Cor sutil baseada na distância
-        const dustColor = new THREE.Color();
-        if (distanceRatio < 0.3) {
-          dustColor.setHex(0xffeedd);
-        } else if (distanceRatio < 0.6) {
-          dustColor.setHex(0xaabbdd);
-        } else {
-          dustColor.setHex(0x8899cc);
-        }
-        
-        const brightness = 0.21 + Math.random() * 0.21;
-        dustColors[i3] = dustColor.r * brightness;
-        dustColors[i3 + 1] = dustColor.g * brightness;
-        dustColors[i3 + 2] = dustColor.b * brightness;
-      }
-      
-      dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-      dustGeometry.setAttribute('color', new THREE.BufferAttribute(dustColors, 3));
-      
-      const dustMaterial = new THREE.PointsMaterial({
-        size: 2.5,
-        sizeAttenuation: true,
-        transparent: true,
-        opacity: 0.35,
-        vertexColors: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-      
-      const dustParticles = new THREE.Points(dustGeometry, dustMaterial);
-      dustParticles.name = 'galaxy-dust';
-      galaxyGroup.add(dustParticles);
-      
-      // Núcleo luminoso (Bulge glow) - camadas de luz volumétrica
-      for (let layer = 0; layer < 6; layer++) {
-        const bulgeSize = 250 + layer * 180;
-        const bulgeGeo = new THREE.SphereGeometry(bulgeSize, 32, 32);
-        const bulgeMat = new THREE.MeshBasicMaterial({
-          color: layer < 2 ? 0xfff8e7 : (layer < 4 ? 0xffdd99 : 0xeeddcc),
+      // === NÚCLEO LUMINOSO (GLOW DOURADO) ===
+      // Anel de luz ao redor do buraco negro
+      for (let layer = 0; layer < 4; layer++) {
+        const ringRadius = 350 + layer * 100;
+        const ringGeo = new THREE.TorusGeometry(ringRadius, 80 - layer * 15, 16, 64);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0xffeecc,
           transparent: true,
-          opacity: 0.1 - layer * 0.013,
+          opacity: 0.08 - layer * 0.015,
           blending: THREE.AdditiveBlending,
           depthWrite: false
         });
-        const bulge = new THREE.Mesh(bulgeGeo, bulgeMat);
-        bulge.name = `galaxy-bulge-${layer}`;
-        galaxyGroup.add(bulge);
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.name = `core-ring-${layer}`;
+        galaxyGroup.add(ring);
       }
       
-      // Glow central intenso
-      const coreGlowGeo = new THREE.SphereGeometry(180, 32, 32);
-      const coreGlowMat = new THREE.MeshBasicMaterial({
-        color: 0xffffee,
-        transparent: true,
-        opacity: 0.2,
-        blending: THREE.AdditiveBlending
-      });
-      const coreGlow = new THREE.Mesh(coreGlowGeo, coreGlowMat);
-      coreGlow.name = 'galaxy-core-glow';
-      galaxyGroup.add(coreGlow);
-      
-      // Posicionar e inclinar a galáxia
-      galaxyGroup.rotation.x = Math.PI * 0.12; // Inclinação mais sutil
-      galaxyGroup.rotation.z = Math.PI * 0.03;
-      galaxyGroup.position.y = -150; // Ligeiramente abaixo do centro
+      // Posicionar a galáxia (sem glow central)
+      galaxyGroup.rotation.x = Math.PI * 0.08; // Inclinação sutil
+      galaxyGroup.position.y = -100;
       
       scene.add(galaxyGroup);
 
-      // Estrelas de fundo DENSAS (muito mais para preencher todo o espaço)
+      // === GALÁXIAS DISTANTES (UNIVERSO PROFUNDO) - Realistas e difusas ===
+      const createDistantGalaxy = (
+        posX: number, posY: number, posZ: number, 
+        scale: number, 
+        rotX: number, rotY: number, rotZ: number,
+        particleCount: number,
+        color1: number, color2: number,
+        galaxyType: 'spiral' | 'elliptical' | 'irregular' = 'spiral'
+      ) => {
+        const distantGalaxyGroup = new THREE.Group();
+        
+        const dgGeometry = new THREE.BufferGeometry();
+        const dgPositions = new Float32Array(particleCount * 3);
+        const dgColors = new Float32Array(particleCount * 3);
+        
+        const col1 = new THREE.Color(color1);
+        const col2 = new THREE.Color(color2);
+        
+        // Função para ruído gaussiano suave
+        const softGauss = () => {
+          const u1 = Math.random();
+          const u2 = Math.random();
+          return Math.sqrt(-2 * Math.log(u1 + 0.001)) * Math.cos(2 * Math.PI * u2);
+        };
+        
+        for (let i = 0; i < particleCount; i++) {
+          const i3 = i * 3;
+          let x = 0, y = 0, z = 0;
+          let brightness = 0.3;
+          
+          if (galaxyType === 'elliptical') {
+            // Galáxia elíptica - distribuição suave sem braços
+            const r = Math.pow(Math.random(), 0.5) * 100;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const flatten = 0.4 + Math.random() * 0.3;
+            
+            x = r * Math.sin(phi) * Math.cos(theta) + softGauss() * 15;
+            y = r * Math.sin(phi) * Math.sin(theta) * flatten + softGauss() * 8;
+            z = r * Math.cos(phi) + softGauss() * 15;
+            
+            brightness = 0.12 + Math.random() * 0.2 * (1 - r / 120);
+            
+          } else if (galaxyType === 'irregular') {
+            // Galáxia irregular - manchas difusas
+            const clumpX = (Math.random() - 0.5) * 80;
+            const clumpZ = (Math.random() - 0.5) * 80;
+            
+            x = clumpX + softGauss() * 35;
+            y = softGauss() * 12;
+            z = clumpZ + softGauss() * 35;
+            
+            brightness = 0.08 + Math.random() * 0.15;
+            
+          } else {
+            // Galáxia espiral - MUITO difusa e suave
+            const isCore = Math.random() < 0.4;
+            
+            if (isCore) {
+              // Núcleo difuso - nuvem suave
+              const r = Math.pow(Math.random(), 0.7) * 45;
+              const angle = Math.random() * Math.PI * 2;
+              x = Math.cos(angle) * r + softGauss() * 18;
+              y = softGauss() * 10;
+              z = Math.sin(angle) * r + softGauss() * 18;
+              
+              brightness = 0.15 + Math.random() * 0.25 * (1 - r / 55);
+            } else {
+              // Braços espirais MUITO difusos
+              const armIndex = Math.floor(Math.random() * 2);
+              const armOffset = armIndex * Math.PI;
+              const t = Math.pow(Math.random(), 0.5);
+              const distance = 35 + t * 100;
+              
+              const spiralAngle = armOffset + Math.log(Math.max(distance, 25) / 22) / 0.55;
+              
+              // MUITO espalhamento
+              const spread = 22 + distance * 0.3;
+              const spreadX = softGauss() * spread;
+              const spreadZ = softGauss() * spread;
+              
+              x = Math.cos(spiralAngle) * distance + spreadX;
+              y = softGauss() * 8;
+              z = Math.sin(spiralAngle) * distance + spreadZ;
+              
+              brightness = 0.06 + Math.random() * 0.14 * (1 - distance / 160);
+            }
+          }
+          
+          dgPositions[i3] = x;
+          dgPositions[i3 + 1] = y;
+          dgPositions[i3 + 2] = z;
+          
+          // Mistura de cores suave
+          const distFromCenter = Math.sqrt(x*x + z*z);
+          const ratio = Math.min(distFromCenter / 130, 1);
+          const mixedColor = col1.clone().lerp(col2, ratio * 0.5);
+          
+          dgColors[i3] = mixedColor.r * brightness;
+          dgColors[i3 + 1] = mixedColor.g * brightness;
+          dgColors[i3 + 2] = mixedColor.b * brightness;
+        }
+        
+        dgGeometry.setAttribute('position', new THREE.BufferAttribute(dgPositions, 3));
+        dgGeometry.setAttribute('color', new THREE.BufferAttribute(dgColors, 3));
+        
+        const dgMaterial = new THREE.PointsMaterial({
+          size: 1.2 * scale,
+          sizeAttenuation: true,
+          transparent: true,
+          opacity: 0.3,
+          vertexColors: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        
+        const dgParticles = new THREE.Points(dgGeometry, dgMaterial);
+        distantGalaxyGroup.add(dgParticles);
+        
+        // Halo/névoa sutil ao redor
+        const hazeGeometry = new THREE.BufferGeometry();
+        const hazeCount = Math.floor(particleCount * 0.25);
+        const hazePositions = new Float32Array(hazeCount * 3);
+        const hazeColors = new Float32Array(hazeCount * 3);
+        
+        for (let i = 0; i < hazeCount; i++) {
+          const i3 = i * 3;
+          const r = Math.pow(Math.random(), 0.4) * 150;
+          const theta = Math.random() * Math.PI * 2;
+          const flatten = 0.25 + Math.random() * 0.15;
+          
+          hazePositions[i3] = Math.cos(theta) * r + softGauss() * 25;
+          hazePositions[i3 + 1] = softGauss() * 15 * flatten;
+          hazePositions[i3 + 2] = Math.sin(theta) * r + softGauss() * 25;
+          
+          const hazeBrightness = 0.02 + Math.random() * 0.04;
+          hazeColors[i3] = col1.r * hazeBrightness;
+          hazeColors[i3 + 1] = col1.g * hazeBrightness;
+          hazeColors[i3 + 2] = col1.b * hazeBrightness;
+        }
+        
+        hazeGeometry.setAttribute('position', new THREE.BufferAttribute(hazePositions, 3));
+        hazeGeometry.setAttribute('color', new THREE.BufferAttribute(hazeColors, 3));
+        
+        const hazeMaterial = new THREE.PointsMaterial({
+          size: 3.5 * scale,
+          sizeAttenuation: true,
+          transparent: true,
+          opacity: 0.12,
+          vertexColors: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        
+        const hazeParticles = new THREE.Points(hazeGeometry, hazeMaterial);
+        distantGalaxyGroup.add(hazeParticles);
+        
+        distantGalaxyGroup.position.set(posX, posY, posZ);
+        distantGalaxyGroup.rotation.set(rotX, rotY, rotZ);
+        distantGalaxyGroup.scale.set(scale, scale, scale);
+        distantGalaxyGroup.name = 'distant-galaxy';
+        
+        return distantGalaxyGroup;
+      };
+      
+      // Criar galáxias distantes com variedade de tipos para maior realismo
+      const distantGalaxies: Array<{
+        pos: number[]; scale: number; rot: number[]; particles: number; 
+        colors: number[]; type: 'spiral' | 'elliptical' | 'irregular';
+      }> = [
+        // Galáxias grandes (mais próximas no fundo) - mix de tipos
+        { pos: [8000, 2000, -5000], scale: 8, rot: [0.3, 0.5, 0.2], particles: 1000, colors: [0xffeedd, 0xaabbff], type: 'spiral' },
+        { pos: [-7000, -1500, -6000], scale: 7, rot: [0.8, 0.2, 0.4], particles: 900, colors: [0xffeecc, 0xddccaa], type: 'elliptical' },
+        { pos: [5000, 3500, 7000], scale: 9, rot: [0.5, 1.2, 0.3], particles: 1100, colors: [0xfff0e0, 0xbbccff], type: 'spiral' },
+        { pos: [-6000, 2500, 6500], scale: 6, rot: [0.2, 0.8, 0.6], particles: 800, colors: [0xffe8d0, 0xeeddbb], type: 'elliptical' },
+        
+        // Galáxias médias - mais elípticas e irregulares
+        { pos: [9000, -3000, 4000], scale: 5, rot: [1.0, 0.3, 0.5], particles: 650, colors: [0xffddc0, 0x8899dd], type: 'spiral' },
+        { pos: [-8500, 1000, -4500], scale: 5, rot: [0.4, 1.5, 0.2], particles: 600, colors: [0xffeedd, 0xddccbb], type: 'elliptical' },
+        { pos: [4000, -4000, -8000], scale: 6, rot: [0.7, 0.4, 0.8], particles: 700, colors: [0xaaddff, 0x88aadd], type: 'irregular' },
+        { pos: [-4500, 4500, 8000], scale: 5, rot: [0.9, 0.6, 0.3], particles: 550, colors: [0xffeecc, 0xeeddaa], type: 'elliptical' },
+        { pos: [7500, 4000, 5500], scale: 4, rot: [0.3, 0.9, 0.7], particles: 500, colors: [0xffddb0, 0x7799cc], type: 'spiral' },
+        { pos: [-9000, -2500, 3000], scale: 5, rot: [1.2, 0.2, 0.4], particles: 580, colors: [0xccddff, 0x99bbdd], type: 'irregular' },
+        
+        // Galáxias pequenas (muito distantes)
+        { pos: [10000, 1000, -8000], scale: 3, rot: [0.5, 0.7, 0.9], particles: 400, colors: [0xffeedd, 0xddccbb], type: 'elliptical' },
+        { pos: [-10500, 3000, -7000], scale: 3, rot: [0.8, 1.0, 0.2], particles: 380, colors: [0xffddc0, 0x6688aa], type: 'spiral' },
+        { pos: [6000, -5000, 9000], scale: 3, rot: [0.2, 0.5, 1.1], particles: 420, colors: [0xbbddff, 0x7799bb], type: 'irregular' },
+        { pos: [-5500, -4500, -9500], scale: 2.5, rot: [0.6, 0.3, 0.8], particles: 350, colors: [0xffeec0, 0xeeddcc], type: 'elliptical' },
+        { pos: [11000, -2000, 6000], scale: 2.5, rot: [1.1, 0.8, 0.4], particles: 340, colors: [0xffe8b0, 0x6699cc], type: 'spiral' },
+        { pos: [-11000, 500, 5000], scale: 2, rot: [0.4, 1.2, 0.6], particles: 280, colors: [0xffdda0, 0xddccaa], type: 'elliptical' },
+        { pos: [3000, 6000, -10000], scale: 2.5, rot: [0.9, 0.4, 0.7], particles: 360, colors: [0xfff0d0, 0x7788bb], type: 'spiral' },
+        { pos: [-3500, -6000, 10500], scale: 2, rot: [0.3, 0.9, 1.0], particles: 300, colors: [0xaaccff, 0x6677aa], type: 'irregular' },
+        
+        // Galáxias muito distantes (manchas difusas)
+        { pos: [12000, 4000, -4000], scale: 1.5, rot: [0.7, 0.5, 0.3], particles: 220, colors: [0xffeedd, 0xeeddcc], type: 'elliptical' },
+        { pos: [-12500, -1500, -6000], scale: 1.5, rot: [0.5, 0.8, 0.9], particles: 200, colors: [0xffddc0, 0x4466aa], type: 'spiral' },
+        { pos: [8000, -6000, -7500], scale: 1.5, rot: [0.2, 1.1, 0.5], particles: 240, colors: [0xddddff, 0x5577bb], type: 'irregular' },
+        { pos: [-7500, 5500, -8500], scale: 1.2, rot: [0.9, 0.3, 0.7], particles: 180, colors: [0xffeec0, 0xddccbb], type: 'elliptical' },
+        { pos: [13000, 0, 3000], scale: 1.2, rot: [0.4, 0.6, 0.8], particles: 190, colors: [0xffe8b0, 0x5588aa], type: 'spiral' },
+        { pos: [-13000, 2500, -2000], scale: 1, rot: [0.8, 0.2, 0.6], particles: 150, colors: [0xffdda0, 0xccbbaa], type: 'elliptical' },
+      ];
+      
+      distantGalaxies.forEach(g => {
+        const galaxy = createDistantGalaxy(
+          g.pos[0], g.pos[1], g.pos[2],
+          g.scale,
+          g.rot[0], g.rot[1], g.rot[2],
+          g.particles,
+          g.colors[0], g.colors[1],
+          g.type
+        );
+        scene.add(galaxy);
+      });
+
+      // === ESTRELAS DE FUNDO (POUCAS E SUTIS) ===
       const starGeo = new THREE.BufferGeometry();
       const starPos = [];
       const starColors = [];
-      // Camada interna de estrelas
-      for(let i=0; i<12500; i++) {
-        const r = 5500 + Math.random() * 3000;
+      
+      // Apenas uma camada de estrelas distantes e sutis
+      for(let i=0; i<8000; i++) {
+        const r = 7000 + Math.random() * 6000;
         const u = Math.random(); const v = Math.random();
         const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
         starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
         
-        // Cores variadas para estrelas de fundo
-        const starType = Math.random();
-        if (starType < 0.1) {
-          starColors.push(1.0, 0.8, 0.6); // Laranja
-        } else if (starType < 0.25) {
-          starColors.push(0.85, 0.9, 1.0); // Azul claro
-        } else {
-          starColors.push(0.75, 0.75, 0.8); // Branco acinzentado
-        }
+        // Cores muito sutis - azuladas
+        const brightness = 0.3 + Math.random() * 0.4;
+        starColors.push(brightness * 0.7, brightness * 0.75, brightness * 0.9);
       }
-      // Camada externa de estrelas
-      for(let i=0; i<20000; i++) {
-        const r = 8000 + Math.random() * 5000;
-        const u = Math.random(); const v = Math.random();
-        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
-        starPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
-        
-        const starType = Math.random();
-        if (starType < 0.15) {
-          starColors.push(1.0, 0.85, 0.7); // Laranja
-        } else if (starType < 0.3) {
-          starColors.push(0.8, 0.88, 1.0); // Azul claro
-        } else {
-          starColors.push(0.7, 0.7, 0.75); // Branco acinzentado
-        }
-      }
+      
       starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
       starGeo.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
       const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ 
-        size: 1.2, 
+        size: 1.0, 
         transparent: true, 
-        opacity: 0.6, 
+        opacity: 0.4, 
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       }));
       stars.name = 'shell-stars';
       scene.add(stars);
+      
+      // === ESTRELAS DO UNIVERSO PROFUNDO ===
+      const deepSpaceStarGeo = new THREE.BufferGeometry();
+      const deepStarPos = [];
+      const deepStarColors = [];
+      
+      // Estrelas muito distantes - preenchendo o universo profundo
+      for(let i=0; i<25000; i++) {
+        const r = 10000 + Math.random() * 10000; // De 10k a 20k de distância
+        const u = Math.random(); const v = Math.random();
+        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
+        
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = r * Math.cos(phi);
+        
+        deepStarPos.push(x, y, z);
+        
+        // Cores variadas - brancas, azuladas e algumas amareladas
+        const starType = Math.random();
+        const brightness = 0.2 + Math.random() * 0.5;
+        
+        if (starType < 0.6) {
+          // Brancas/azuladas (maioria)
+          deepStarColors.push(brightness * 0.8, brightness * 0.85, brightness * 1.0);
+        } else if (starType < 0.85) {
+          // Brancas puras
+          deepStarColors.push(brightness * 0.9, brightness * 0.9, brightness * 0.9);
+        } else {
+          // Amareladas/alaranjadas (poucas)
+          deepStarColors.push(brightness * 1.0, brightness * 0.85, brightness * 0.6);
+        }
+      }
+      
+      deepSpaceStarGeo.setAttribute('position', new THREE.Float32BufferAttribute(deepStarPos, 3));
+      deepSpaceStarGeo.setAttribute('color', new THREE.Float32BufferAttribute(deepStarColors, 3));
+      
+      const deepSpaceStars = new THREE.Points(deepSpaceStarGeo, new THREE.PointsMaterial({ 
+        size: 0.8, 
+        transparent: true, 
+        opacity: 0.5, 
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }));
+      deepSpaceStars.name = 'deep-space-stars';
+      scene.add(deepSpaceStars);
+      
+      // === ESTRELAS AINDA MAIS DISTANTES (FUNDO CÓSMICO) ===
+      const cosmicBgGeo = new THREE.BufferGeometry();
+      const cosmicPos = [];
+      const cosmicColors = [];
+      
+      for(let i=0; i<15000; i++) {
+        const r = 18000 + Math.random() * 12000; // De 18k a 30k
+        const u = Math.random(); const v = Math.random();
+        const theta = 2 * Math.PI * u; const phi = Math.acos(2 * v - 1);
+        
+        cosmicPos.push(
+          r * Math.sin(phi) * Math.cos(theta),
+          r * Math.sin(phi) * Math.sin(theta),
+          r * Math.cos(phi)
+        );
+        
+        // Cores muito sutis e frias
+        const brightness = 0.15 + Math.random() * 0.3;
+        cosmicColors.push(brightness * 0.7, brightness * 0.75, brightness * 0.9);
+      }
+      
+      cosmicBgGeo.setAttribute('position', new THREE.Float32BufferAttribute(cosmicPos, 3));
+      cosmicBgGeo.setAttribute('color', new THREE.Float32BufferAttribute(cosmicColors, 3));
+      
+      const cosmicBgStars = new THREE.Points(cosmicBgGeo, new THREE.PointsMaterial({ 
+        size: 0.5, 
+        transparent: true, 
+        opacity: 0.35, 
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      }));
+      cosmicBgStars.name = 'cosmic-bg-stars';
+      scene.add(cosmicBgStars);
 
       (Object.entries(clusterCentroids) as [string, {x: number, y: number, z: number}][]).forEach(([cat, pos]) => {
         const count = panels.filter(p => p.group === cat).length;
