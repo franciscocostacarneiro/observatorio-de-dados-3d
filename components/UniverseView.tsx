@@ -330,7 +330,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       galaxyGroup.name = 'spiral-galaxy';
       
       // Parâmetros para espiral bem definida
-      const PARTICLE_COUNT = 95000; // Aumentado para mais realismo
+      const PARTICLE_COUNT = 150000; // Aumentado para braços mais grossos
       const GALAXY_RADIUS = 4500;
       
       const galaxyGeometry = new THREE.BufferGeometry();
@@ -354,79 +354,120 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const i3 = i * 3;
         
-        // Distribuição: 25% núcleo denso, 75% braços espirais
-        const rand = Math.random();
-        const isInCore = rand < 0.25;
+        // GALÁXIA ESPIRAL TIPO VIA LÁCTEA - Braços largos e nebulosos
+        // Distribuição: 30% núcleo, 70% braços largos
+        const isCore = Math.random() < 0.30;
         
-        let x, y, z, distanceRatio;
+        let x, y, z;
+        let distanceFromCenter: number;
+        let brightness: number;
         
-        if (isInCore) {
-          // NÚCLEO ESPIRAL - estrelas seguem espiral desde o centro
-          const coreRadius = 600;
-          const r = Math.pow(Math.random(), 0.4) * coreRadius;
+        if (isCore) {
+          // NÚCLEO GALÁCTICO - Compacto e brilhante
+          const r = Math.pow(Math.random(), 3.5) * 320;
+          const theta = Math.random() * Math.PI * 2;
           
-          // Espiral continua até o centro!
-          const armIndex = Math.floor(Math.random() * 2);
-          const armOffset = armIndex * Math.PI;
-          const spiralAngle = armOffset + Math.log(Math.max(r, 10) / 10) / 0.3;
+          x = Math.cos(theta) * r + gaussRand() * 12;
+          z = Math.sin(theta) * r + gaussRand() * 12;
+          y = gaussRand() * 10;
           
-          // Espalhamento muito fino no núcleo
-          const spread = 15 + r * 0.05;
-          x = Math.cos(spiralAngle) * r + gaussRand() * spread;
-          z = Math.sin(spiralAngle) * r + gaussRand() * spread;
-          y = gaussRand() * 25; // Muito fino
+          distanceFromCenter = r;
+          brightness = 0.75 + Math.random() * 0.2;
           
-          distanceRatio = r / GALAXY_RADIUS;
         } else {
-          // BRAÇOS ESPIRAIS EM "S" - continuação do núcleo
+          // BRAÇOS ESPIRAIS - MUITO LARGOS E NEBULOSOS
           const armIndex = Math.floor(Math.random() * 2);
           const armOffset = armIndex * Math.PI;
           
-          // Distância a partir do núcleo
+          // Distribuição radial suave
           const t = Math.pow(Math.random(), 0.6);
-          const distance = 400 + t * (GALAXY_RADIUS - 400);
-          distanceRatio = distance / GALAXY_RADIUS;
+          const distance = 320 + t * (GALAXY_RADIUS - 320);
           
-          // Espiral logarítmica contínua
-          const spiralTightness = 0.32;
-          const spiralAngle = armOffset + Math.log(distance / 10) / spiralTightness;
+          // Espiral suave
+          const spiralTightness = 0.30;
+          const spiralAngle = armOffset + Math.log(distance / 300) / spiralTightness;
           
-          // Espalhamento cresce com a distância
-          const spreadWidth = 50 + distance * 0.06;
-          const spreadX = gaussRand() * spreadWidth;
-          const spreadZ = gaussRand() * spreadWidth;
+          // BRAÇOS MUITO LARGOS - estilo nebulosa
+          const armWidth = 350 + distance * 0.30; // Muito largo
+          
+          // Distribuição mais dispersa para efeito nebuloso
+          const dispersion = Math.pow(Math.random(), 0.4); // Mais uniforme
+          const angle = (Math.random() - 0.5) * Math.PI * 0.4; // Espalhamento angular
+          
+          const spreadX = dispersion * armWidth * Math.cos(angle);
+          const spreadZ = dispersion * armWidth * Math.sin(angle);
           
           x = Math.cos(spiralAngle) * distance + spreadX;
           z = Math.sin(spiralAngle) * distance + spreadZ;
           
-          // Altura fina
-          const heightSpread = 30 * (1 - distanceRatio * 0.4);
+          // Altura mais volumosa
+          const heightSpread = 25 + distance * 0.018;
           y = gaussRand() * heightSpread;
+          
+          distanceFromCenter = Math.sqrt(x*x + z*z);
+          brightness = 0.45 + Math.random() * 0.3;
         }
         
         positions[i3] = x;
         positions[i3 + 1] = y;
         positions[i3 + 2] = z;
         
-        // Cor uniforme branca-azulada para todo o espiral
-        const galaxyColor = new THREE.Color(0xddddee); // Branco azulado uniforme
+        // CORES GRADIENTE - Amarelo centro -> Rosa/Roxo -> Azul bordas
+        let galaxyColor: THREE.Color;
+        const normalizedDistance = distanceFromCenter / GALAXY_RADIUS;
         
-        // Intensidade ÚNICA em toda a galáxia
-        const uniformBrightness = 0.25; // Intensidade única e moderada
-        colors[i3] = galaxyColor.r * uniformBrightness;
-        colors[i3 + 1] = galaxyColor.g * uniformBrightness;
-        colors[i3 + 2] = galaxyColor.b * uniformBrightness;
+        if (normalizedDistance < 0.15) {
+          // Núcleo: Amarelo-alaranjado brilhante
+          const mix = Math.random();
+          if (mix < 0.6) {
+            galaxyColor = new THREE.Color(0xffdd88); // Amarelo
+          } else {
+            galaxyColor = new THREE.Color(0xffbb66); // Alaranjado
+          }
+        } else if (normalizedDistance < 0.35) {
+          // Transição: Rosa intenso
+          const mix = Math.random();
+          if (mix < 0.5) {
+            galaxyColor = new THREE.Color(0xffaacc); // Rosa claro
+          } else if (mix < 0.8) {
+            galaxyColor = new THREE.Color(0xff88bb); // Rosa médio
+          } else {
+            galaxyColor = new THREE.Color(0xee99ff); // Rosa-roxo
+          }
+        } else if (normalizedDistance < 0.65) {
+          // Meio: Roxo-azul
+          const mix = Math.random();
+          if (mix < 0.4) {
+            galaxyColor = new THREE.Color(0xbb88ff); // Roxo
+          } else if (mix < 0.7) {
+            galaxyColor = new THREE.Color(0x99aaff); // Azul-roxo
+          } else {
+            galaxyColor = new THREE.Color(0xaaccff); // Azul claro
+          }
+        } else {
+          // Bordas: Azul profundo
+          const mix = Math.random();
+          if (mix < 0.7) {
+            galaxyColor = new THREE.Color(0x7799dd); // Azul médio
+          } else {
+            galaxyColor = new THREE.Color(0x5577bb); // Azul escuro
+          }
+        }
+        
+        colors[i3] = galaxyColor.r * brightness;
+        colors[i3 + 1] = galaxyColor.g * brightness;
+        colors[i3 + 2] = galaxyColor.b * brightness;
       }
       
       galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       
-      // Material - opacidade ajustada para realismo
+      // Material da galáxia - mais visível e nebuloso
       const galaxyMaterial = new THREE.PointsMaterial({
-        size: 2.0,
+        size: 3.0, // Maior para efeito nebuloso
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.45, // Aumentado para mais presença visual
+        opacity: 0.75, // Mais opaco
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
@@ -436,23 +477,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       galaxyParticles.name = 'galaxy-particles';
       galaxyGroup.add(galaxyParticles);
       
-      // === NÚCLEO LUMINOSO (GLOW MUITO SUTIL) ===
-      // Anel de luz muito sutil ao redor do centro
-      for (let layer = 0; layer < 2; layer++) {
-        const ringRadius = 350 + layer * 100;
-        const ringGeo = new THREE.TorusGeometry(ringRadius, 40 - layer * 10, 16, 64);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: 0xffeecc,
-          transparent: true,
-          opacity: 0.012 - layer * 0.004,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false
-        });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2;
-        ring.name = `core-ring-${layer}`;
-        galaxyGroup.add(ring);
-      }
+      // Removido núcleo luminoso separado - espiral totalmente uniforme
       
       // Posicionar a galáxia (sem glow central)
       galaxyGroup.rotation.x = Math.PI * 0.08; // Inclinação sutil
@@ -902,7 +927,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       new THREE.MeshStandardMaterial({ 
         color: node.color, 
         emissive: node.color, 
-        emissiveIntensity: isHovered ? 25.0 : (isRelated ? 12.0 : 8.0), // Reduzido
+        emissiveIntensity: isHovered ? 18.0 : (isRelated ? 8.0 : 5.0), // Reduzido ainda mais
         metalness: 1.0,
         roughness: 0.0
       })
@@ -928,11 +953,11 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       map: glowTex, 
       transparent: true, 
       blending: THREE.AdditiveBlending,
-      opacity: isHovered ? 0.85 : (isRelated ? 0.7 : 0.6), // Reduzido
+      opacity: isHovered ? 0.7 : (isRelated ? 0.5 : 0.4), // Reduzido ainda mais
       depthTest: false,
       depthWrite: false
     }));
-    glowSprite.scale.set(node.val * 10, node.val * 10, 1); // Reduzido de 12 para 10
+    glowSprite.scale.set(node.val * 8, node.val * 8, 1); // Reduzido de 10 para 8
     group.add(glowSprite);
 
     if (isHovered) {
