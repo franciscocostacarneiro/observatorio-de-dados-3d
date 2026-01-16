@@ -927,7 +927,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       new THREE.MeshStandardMaterial({ 
         color: node.color, 
         emissive: node.color, 
-        emissiveIntensity: isHovered ? 18.0 : (isRelated ? 8.0 : 5.0), // Reduzido ainda mais
+        emissiveIntensity: isHovered ? 14.4 : (isRelated ? 6.4 : 4.0), // Reduzido 20%
         metalness: 1.0,
         roughness: 0.0
       })
@@ -953,7 +953,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       map: glowTex, 
       transparent: true, 
       blending: THREE.AdditiveBlending,
-      opacity: isHovered ? 0.7 : (isRelated ? 0.5 : 0.4), // Reduzido ainda mais
+      opacity: isHovered ? 0.56 : (isRelated ? 0.4 : 0.32), // Reduzido 20%
       depthTest: false,
       depthWrite: false
     }));
