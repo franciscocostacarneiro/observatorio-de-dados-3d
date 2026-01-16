@@ -330,7 +330,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       galaxyGroup.name = 'spiral-galaxy';
       
       // Parâmetros para espiral bem definida
-      const PARTICLE_COUNT = 55000;
+      const PARTICLE_COUNT = 95000; // Aumentado para mais realismo
       const GALAXY_RADIUS = 4500;
       
       const galaxyGeometry = new THREE.BufferGeometry();
@@ -408,36 +408,25 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
         positions[i3 + 1] = y;
         positions[i3 + 2] = z;
         
-        // Gradiente de cor contínuo do centro às pontas
-        const mixedColor = new THREE.Color();
-        if (distanceRatio < 0.1) {
-          // Centro brilhante
-          mixedColor.copy(coreColor);
-        } else if (distanceRatio < 0.25) {
-          mixedColor.copy(coreColor).lerp(midColor, (distanceRatio - 0.1) / 0.15);
-        } else if (distanceRatio < 0.5) {
-          mixedColor.copy(midColor).lerp(armColor, (distanceRatio - 0.25) / 0.25);
-        } else {
-          mixedColor.copy(armColor).lerp(tipColor, (distanceRatio - 0.5) / 0.5);
-        }
+        // Cor uniforme branca-azulada para todo o espiral
+        const galaxyColor = new THREE.Color(0xddddee); // Branco azulado uniforme
         
-        // Brilho MUITO reduzido no centro para destacar os nós
-        const baseBrightness = isInCore ? 0.18 : 0.22;
-        const brightness = baseBrightness + Math.random() * 0.12;
-        colors[i3] = mixedColor.r * brightness;
-        colors[i3 + 1] = mixedColor.g * brightness;
-        colors[i3 + 2] = mixedColor.b * brightness;
+        // Intensidade ÚNICA em toda a galáxia
+        const uniformBrightness = 0.25; // Intensidade única e moderada
+        colors[i3] = galaxyColor.r * uniformBrightness;
+        colors[i3 + 1] = galaxyColor.g * uniformBrightness;
+        colors[i3 + 2] = galaxyColor.b * uniformBrightness;
       }
       
       galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       
-      // Material - opacidade MUITO reduzida para destacar nós
+      // Material - opacidade ajustada para realismo
       const galaxyMaterial = new THREE.PointsMaterial({
-        size: 2.2,
+        size: 2.0,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.45, // Aumentado para mais presença visual
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
@@ -913,7 +902,7 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       new THREE.MeshStandardMaterial({ 
         color: node.color, 
         emissive: node.color, 
-        emissiveIntensity: isHovered ? 40.0 : (isRelated ? 22.0 : 16.0),
+        emissiveIntensity: isHovered ? 25.0 : (isRelated ? 12.0 : 8.0), // Reduzido
         metalness: 1.0,
         roughness: 0.0
       })
@@ -939,11 +928,11 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       map: glowTex, 
       transparent: true, 
       blending: THREE.AdditiveBlending,
-      opacity: isHovered ? 1.0 : (isRelated ? 1.0 : 0.95),
+      opacity: isHovered ? 0.85 : (isRelated ? 0.7 : 0.6), // Reduzido
       depthTest: false,
       depthWrite: false
     }));
-    glowSprite.scale.set(node.val * 12, node.val * 12, 1);
+    glowSprite.scale.set(node.val * 10, node.val * 10, 1); // Reduzido de 12 para 10
     group.add(glowSprite);
 
     if (isHovered) {
