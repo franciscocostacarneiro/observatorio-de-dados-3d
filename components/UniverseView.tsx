@@ -421,9 +421,9 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
           mixedColor.copy(armColor).lerp(tipColor, (distanceRatio - 0.5) / 0.5);
         }
         
-        // Brilho mais forte no centro
-        const baseBrightness = isInCore ? 0.7 : 0.5;
-        const brightness = baseBrightness + Math.random() * 0.3;
+        // Brilho MUITO reduzido no centro para destacar os nós
+        const baseBrightness = isInCore ? 0.18 : 0.22;
+        const brightness = baseBrightness + Math.random() * 0.12;
         colors[i3] = mixedColor.r * brightness;
         colors[i3 + 1] = mixedColor.g * brightness;
         colors[i3 + 2] = mixedColor.b * brightness;
@@ -432,12 +432,12 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       
-      // Material
+      // Material - opacidade MUITO reduzida para destacar nós
       const galaxyMaterial = new THREE.PointsMaterial({
-        size: 2.8,
+        size: 2.2,
         sizeAttenuation: true,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.35,
         vertexColors: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
@@ -447,15 +447,15 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       galaxyParticles.name = 'galaxy-particles';
       galaxyGroup.add(galaxyParticles);
       
-      // === NÚCLEO LUMINOSO (GLOW DOURADO) ===
-      // Anel de luz ao redor do buraco negro
-      for (let layer = 0; layer < 4; layer++) {
+      // === NÚCLEO LUMINOSO (GLOW MUITO SUTIL) ===
+      // Anel de luz muito sutil ao redor do centro
+      for (let layer = 0; layer < 2; layer++) {
         const ringRadius = 350 + layer * 100;
-        const ringGeo = new THREE.TorusGeometry(ringRadius, 80 - layer * 15, 16, 64);
+        const ringGeo = new THREE.TorusGeometry(ringRadius, 40 - layer * 10, 16, 64);
         const ringMat = new THREE.MeshBasicMaterial({
           color: 0xffeecc,
           transparent: true,
-          opacity: 0.08 - layer * 0.015,
+          opacity: 0.012 - layer * 0.004,
           blending: THREE.AdditiveBlending,
           depthWrite: false
         });
@@ -909,11 +909,11 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     group.add(hitbox);
     
     const core = new THREE.Mesh(
-      new THREE.SphereGeometry(node.val, 28, 28),
+      new THREE.SphereGeometry(node.val * 1.4, 28, 28),
       new THREE.MeshStandardMaterial({ 
         color: node.color, 
         emissive: node.color, 
-        emissiveIntensity: isHovered ? 18.0 : (isRelated ? 7.2 : 3.6),
+        emissiveIntensity: isHovered ? 40.0 : (isRelated ? 22.0 : 16.0),
         metalness: 1.0,
         roughness: 0.0
       })
@@ -939,11 +939,11 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
       map: glowTex, 
       transparent: true, 
       blending: THREE.AdditiveBlending,
-      opacity: isHovered ? 1.0 : (isRelated ? 0.7 : 0.4),
+      opacity: isHovered ? 1.0 : (isRelated ? 1.0 : 0.95),
       depthTest: false,
       depthWrite: false
     }));
-    glowSprite.scale.set(node.val * 6, node.val * 6, 1);
+    glowSprite.scale.set(node.val * 12, node.val * 12, 1);
     group.add(glowSprite);
 
     if (isHovered) {
@@ -960,8 +960,8 @@ export const UniverseView: React.FC<UniverseViewProps> = ({ panels, onNodeClick 
     }
 
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(node.val * 2.0, 0.5, 8, 64),
-      new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending })
+      new THREE.TorusGeometry(node.val * 2.5, 0.7, 8, 64),
+      new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
     );
     ring.rotation.x = Math.PI / 2.2;
     group.add(ring);
